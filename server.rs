@@ -5,7 +5,6 @@ extern mod http;
 
 use std::io::net::ip::{SocketAddr, Ipv4Addr};
 use std::io::Writer;
-use extra::time;
 
 use http::server::{Config, Server, Request, ResponseWriter};
 use http::server::request::{Star, AbsoluteUri, AbsolutePath, Authority};
@@ -27,7 +26,7 @@ impl Server for FeralServer {
             parameters: ~[(~"charset", ~"UTF-8")]
         });
       let path = match r.request_uri {
-         AbsolutePath(ref url) if url != &~"/" => url.slice_from(1).to_owned(),
+         AbsolutePath(ref url)  => url.slice_from(1).to_owned(),
          _ => ~"README.md"
       };
       println!("Got path: {}",path);
