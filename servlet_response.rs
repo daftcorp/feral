@@ -1,5 +1,5 @@
-use extra::serialize::Encodable;
+use extra::serialize::{Encodable,Encoder};
 pub struct ServletResponse {
   code : uint,
-  response : Option<~Encodable>
+  response : Option<~str>
 }
