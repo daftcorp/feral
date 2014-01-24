@@ -5,7 +5,6 @@ use std::io::Writer;
 
 use http::server::{Config, Server, Request, ResponseWriter};
 use http::headers::content_type::MediaType;
-use std::io::{File, io_error, Open, ReadWrite};
 
 mod dispatcher;
 mod router;
@@ -33,7 +32,6 @@ impl Server for FeralServer {
         Some(s) => s,
         None => ~"",
       };
-      //let contents = File::open(&Path::new(path)).read_to_end();
       w.write(contents.as_bytes());
     }
 }

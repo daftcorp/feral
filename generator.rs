@@ -1,6 +1,8 @@
 extern mod extra;
 use extra::json::{Object,String};
-use std::io::{File};
+use std::io::File;
+use std::io::fs;
+use std::io;
 use std::hashmap::{HashMap,HashSet};
 
 struct RouteHandler {
@@ -19,6 +21,9 @@ fn main() {
   let mut file = File::create(&Path::new("router.rs"));
   let mut modules = HashSet::new();
   for (_k,handler) in table.iter() {
+    if !controller_exists(handler.controller) {
+        fail!(format!("Controller not found: {}",handler.controller));
+    }
     modules.insert(handler.controller.to_owned());
   }
   modules.insert(~"builtin");
@@ -46,4 +51,8 @@ fn toMap(root: ~Object) -> ~HashMap<~str,RouteHandler> {
     table.insert(k.to_owned(), handler);
   }
   ~table
+}
+
+fn controller_exists(cname: &str) -> bool {
+    io::result(|| fs::stat(&Path::new(format!("./controllers/{}.rs",cname)))).is_ok()
 }
