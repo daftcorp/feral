@@ -4,13 +4,12 @@ use std::io::net::ip::{SocketAddr, Ipv4Addr};
 use std::io::Writer;
 
 use http::server::{Config, Server, Request, ResponseWriter};
-use http::server::request::{Star, AbsoluteUri, AbsolutePath, Authority};
 use http::headers::content_type::MediaType;
 use std::io::{File, io_error, Open, ReadWrite};
 
 mod dispatcher;
 mod router;
-mod servlet_response;
+mod servlet;
 
 
 #[deriving(Clone)]
@@ -27,14 +26,15 @@ impl Server for FeralServer {
             subtype: ~"plain",
             parameters: ~[(~"charset", ~"UTF-8")]
         });
-      let path = match r.request_uri {
-         AbsolutePath(ref url)  => url.slice_from(1).to_owned(),
-         _ => ~"README.md"
+      let req = servlet::Request::new(r);
+      println!("Got req: {:?}",req);
+      let sr = dispatcher::dispatch_request(req);
+      let contents = match sr.response {
+        Some(s) => s,
+        None => ~"",
       };
-      println!("Got path: {}",path);
-      let sr = dispatcher::dispatch_request(path,r.body,&r.method);
-      let contents = File::open(&Path::new(path)).read_to_end();
-      w.write(contents);
+      //let contents = File::open(&Path::new(path)).read_to_end();
+      w.write(contents.as_bytes());
     }
 }
 

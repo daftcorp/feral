@@ -21,13 +21,14 @@ fn main() {
   for (_k,handler) in table.iter() {
     modules.insert(handler.controller.to_owned());
   }
-  file.write(bytes!("use servlet_response::ServletResponse;\nmod controllers {\n"));
+  modules.insert(~"builtin");
+  file.write(bytes!("use servlet::{Request,Response};\nmod controllers {\n"));
   file.write(modules.iter().fold(~"",|memo,con| memo + "pub mod "+*con+";\n").as_bytes());
-  file.write(bytes!("}\npub fn getHandler(url:&str) -> fn(&str) -> ~ServletResponse {\nmatch url {\n"));
+  file.write(bytes!("}\npub fn getHandler(sr: &Request) -> fn(&Request) -> ~Response {\nmatch sr.path {\n"));
   for (path, handler) in table.iter() {
     file.write(format!("\"{}\" => controllers::{}::{},\n",*path, handler.controller, handler.action).as_bytes());
   }
-  file.write("_ => ::errors::not_found\n}\n}".as_bytes());
+  file.write("_ => controllers::builtin::not_found,\n}\n}".as_bytes());
 }
 
 fn toMap(root: ~Object) -> ~HashMap<~str,RouteHandler> {

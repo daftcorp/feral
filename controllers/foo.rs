@@ -1,7 +1,7 @@
-use servlet_response::ServletResponse;
-pub fn index(body: &str) -> ~ServletResponse {
-  ~ServletResponse { code : 200, response : None }
+use servlet::{Request,Response};
+pub fn index(req: &Request) -> ~Response {
+  ~Response { code : 200, response : Some(~"index response") }
 }
-pub fn create(body: &str) -> ~ServletResponse {
-  ~ServletResponse { code : 200, response : None }
+pub fn create(req: &Request) -> ~Response {
+  ~Response { code : 200, response : Some(~"create response") }
 }
