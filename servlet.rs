@@ -5,10 +5,9 @@ use http::headers::content_type::MediaType;
 use http::method::Method;
 use http::server::ResponseWriter;
 use http::server::request::{Star, AbsoluteUri, AbsolutePath, Authority};
-
 pub enum ResponseBody {
   Text(~str),
-  JSON(~Encodable<~Encoder>),
+  JSON(~Encodable),
   Empty,
 }
 pub struct Response {
@@ -19,8 +18,8 @@ impl Response {
   pub fn write_to(&self,w : &mut ResponseWriter){
     let buf = match self.body {
       Text(s) => s.as_bytes(),
-      Empty => [u8, ..0],
-      JSON(o) =>  json::Encoder::str_encode(o)
+      Empty => &[],
+      JSON(ref o) =>  json::Encoder::buffer_encode(o)
     };
   }
 }
