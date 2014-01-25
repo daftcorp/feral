@@ -28,11 +28,7 @@ impl Server for FeralServer {
       let req = servlet::Request::new(r);
       println!("Got req: {:?}",req);
       let sr = dispatcher::dispatch_request(req);
-      let contents = match sr.response {
-        Some(s) => s,
-        None => ~"",
-      };
-      w.write(contents.as_bytes());
+      sr.write_to(w);
     }
 }
 

@@ -1,10 +1,10 @@
-use servlet::{Request,Response};
+use servlet::{Request,Response,Text};
 use std::io::{File, io_error, Open, ReadWrite};
 use std::str;
 static srv_root: &'static str = ".";
 pub fn not_found(req: &Request) -> ~Response {
   let msg = "Path '" + req.path +"' is not available on this server.";
-  ~Response { code: 404, response: Some(msg) }
+  ~Response { code: 404, body: Text(msg) }
 }
 pub fn serve_file(req: &Request) -> ~Response {
     let path = srv_root + req.path;
@@ -12,7 +12,7 @@ pub fn serve_file(req: &Request) -> ~Response {
     if p.exists()
     {
         match File::open(&p) {
-            Some(mut f) => ~Response { code: 200, response: Some(f.read_to_str()) },
+            Some(mut f) => ~Response { code: 200, body: Text(f.read_to_str()) },
             None => not_found(req),
         }
     }
