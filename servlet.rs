@@ -1,3 +1,4 @@
+use std::str::from_utf8_owned;
 use extra::serialize::{Encodable,Encoder};
 use extra::json;
 use std::hashmap::HashMap;
@@ -5,23 +6,66 @@ use http::headers::content_type::MediaType;
 use http::method::Method;
 use http::server::ResponseWriter;
 use http::server::request::{Star, AbsoluteUri, AbsolutePath, Authority};
-pub enum ResponseBody {
-  Text(~str),
-  JSON(~Encodable),
-  Empty,
+use http::status::{Ok, Status};
+
+// FIXME: no code/handling and bad content-type hinting
+pub trait ResponseBody {
+    fn get_code(&self) -> Status;
+    fn process(&self) -> (~str, MediaType);
+    fn write_to<'a>(&'a self,w : &mut ResponseWriter){
+        let (content, mt) = self.process();
+        // FIXME: this is cheating, for now, and just using the
+        // write_content_auto() path for the response.. i could
+        // see the original structure was probably leaning towards
+        // write(), but i just wanted to put this to bed.. going back
+        // to write would imply probably changing process's signature,
+        // above, to use &'a [u8] (requiring parameterizing on lifetime)
+        // or using ~[u8]
+        w.status = self.get_code();
+        w.write_content_auto(mt, content);
+    }
 }
-pub struct Response {
-  code : uint,
-  body : ResponseBody,
+
+pub struct JSONResponse<TJSON> {
+    code: Status,
+    content : TJSON
 }
-impl Response {
-  pub fn write_to(&self,w : &mut ResponseWriter){
-    let buf = match self.body {
-      Text(s) => s.as_bytes(),
-      Empty => &[],
-      JSON(ref o) =>  json::Encoder::buffer_encode(o)
-    };
-  }
+
+impl<'a, TJSON: Encodable<json::Encoder<'a>>> ResponseBody for JSONResponse<TJSON> {
+    fn get_code(&self) -> Status { self.code.clone() }
+    fn process(&self) -> (~str, MediaType) {
+        let content = match from_utf8_owned(
+                json::Encoder::buffer_encode(&self.content)) {
+            Some(c) => c,
+            None => ~"" // FIXME: handle failure?
+        };
+        (content.clone(), MediaType(~"application", ~"json", ~[]))
+    }
+}
+
+pub struct TextResponse {
+    code: Status,
+    content: ~str
+}
+
+impl ResponseBody for TextResponse {
+    fn get_code(&self) -> Status { self.code.clone() }
+    fn process(&self) -> (~str, MediaType) {
+        // FIXME: probably want something more flexible for specifying the
+        // content type of the resp.. text/html probably isn't at-all the
+        // the right answer.
+        (self.content.clone(), MediaType(~"text", ~"html", ~[]))
+    }
+}
+
+pub struct EmptyResponse;
+
+impl ResponseBody for EmptyResponse {
+    fn get_code(&self) -> Status { Ok }
+    fn process(&self) -> (~str, MediaType) {
+        // FIXME: same as above
+        (~"", MediaType(~"text", ~"html", ~[]))
+    }
 }
   
 pub struct Request<'a> {
