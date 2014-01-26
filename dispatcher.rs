@@ -1,7 +1,6 @@
 use http::method::Method;
-use servlet::{Request,Response};
+use servlet::{Request,ResponseBody};
 use std::hashmap::HashMap;
-pub fn dispatch_request(sr: ~Request) -> ~Response {
-  let handler = ::router::getHandler(sr);
-  handler(sr)
+pub fn dispatch_request(sr: ~Request) -> ~ResponseBody {
+    ::router::getHandler(sr)
 }
